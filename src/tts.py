@@ -1,4 +1,4 @@
-from gtts import gTTS
+'''from gtts import gTTS
 import os
 
 def generate_tts(text, out_path="artifacts/tts/english.wav"):
@@ -15,3 +15,45 @@ def generate_tts(text, out_path="artifacts/tts/english.wav"):
     tts.save(out_path)
 
     return out_path
+
+from gtts import gTTS
+
+def generate_tts(segments):
+    """
+    4.9 Voice Selection
+    4.10 Text to Speech
+    """
+    audio_files = []
+
+    for i, seg in enumerate(segments):
+        tts = gTTS(seg["translated"], lang="te")
+        out = f"outputs/seg_{i}.mp3"
+        tts.save(out)
+        audio_files.append(out)
+
+    return audio_files
+'''
+from gtts import gTTS
+import os
+
+def generate_tts(segments):
+    """
+    4.9 Voice Selection
+    4.10 Text to Speech
+    """
+    os.makedirs("outputs", exist_ok=True)
+    audio_files = []
+
+    for i, seg in enumerate(segments):
+        # Handle both possible keys safely
+        text = seg.get("text") or seg.get("translated")
+
+        if not text:
+            raise ValueError(f"No text found for TTS in segment {i}: {seg}")
+
+        tts = gTTS(text, lang="te")
+        out = f"outputs/seg_{i}.mp3"
+        tts.save(out)
+        audio_files.append(out)
+
+    return audio_files

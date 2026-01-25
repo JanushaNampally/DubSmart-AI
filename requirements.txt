@@ -1,0 +1,10 @@
+torch
+numpy
+soundfile
+moviepy
+ffmpeg-python
+gTTS
+silero-vad
+assemblyai
+deep-translator
+python-dotenv
