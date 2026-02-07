@@ -1,0 +1,243 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DubSmart AI – Speaker-Aware Video Dubbing</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+    body {
+        font-family: "Segoe UI", sans-serif;
+        background: #F1F3D9;
+        color: #0C2C55;
+        min-height: 100vh;
+        padding: 40px;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: auto;
+        background: #FFFFFF;
+        padding: 30px;
+        border-radius: 18px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 6px;
+        color: #0C2C55;
+        font-weight: 700;
+    }
+
+    .subtitle {
+        text-align: center;
+        font-size: 14px;
+        color: #296374;
+        margin-bottom: 26px;
+    }
+
+    /* Upload bar */
+    .upload-bar {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 26px;
+    }
+
+    input[type="file"] {
+        flex: 1;
+        padding: 12px;
+        background: #F7FAFA;
+        border-radius: 8px;
+        color: #0C2C55;
+        border: 1px solid #D6E0E2;
+    }
+
+    button {
+        background: #296374;
+        color: white;
+        padding: 12px 26px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.2s ease;
+    }
+
+    button:hover {
+        background: #0C2C55;
+    }
+
+    /* Video comparison */
+    .video-compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 26px;
+    }
+
+    .video-card {
+        background: #FFFFFF;
+        border: 1px solid #D6E0E2;
+        border-radius: 14px;
+        padding: 14px;
+    }
+
+    .video-title {
+        text-align: center;
+        font-size: 14px;
+        margin-bottom: 10px;
+        color: #296374;
+        font-weight: 600;
+    }
+
+    video {
+        width: 100%;
+        border-radius: 12px;
+        background: #000;
+    }
+
+    /* Bottom panels */
+    .bottom-panels {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+    }
+
+    .panel {
+        background: #F7FAFA;
+        border: 1px solid #D6E0E2;
+        border-radius: 14px;
+        padding: 16px;
+        font-size: 13px;
+        height: 200px;
+        overflow-y: auto;
+        white-space: pre-line;
+        color: #0C2C55;
+    }
+
+    .panel-title {
+        font-size: 13px;
+        color: #0C2C55;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .footer {
+        text-align: center;
+        margin-top: 18px;
+        font-size: 12px;
+        color: #629FAD;
+    }
+</style>
+
+
+</head>
+
+<body>
+
+<div class="container">
+    <h1>DubSmart AI</h1>
+    <div class="subtitle">Speaker-Aware · Multilingual · AI-Powered Video Dubbing</div>
+
+    <!-- Upload -->
+    <form id="uploadForm" class="upload-bar" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" id="videoInput" name="video" accept="video/*" required>
+        <button type="submit">Start AI Dubbing</button>
+    </form>
+
+    <!-- Video Comparison -->
+    <div class="video-compare">
+        <div class="video-card">
+            <div class="video-title">Original Video (Hindi)</div>
+            <video id="originalVideo" controls></video>
+        </div>
+
+        <div class="video-card">
+            <div class="video-title">Dubbed Output (Telugu)</div>
+            <video id="dubbedVideo" controls></video>
+        </div>
+    </div>
+
+    <!-- Logs & Transcription -->
+    <div class="bottom-panels">
+        <div class="panel">
+            <div class="panel-title">AI Processing Logs</div>
+            <div id="logs">Waiting for input…</div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Speaker-Aware Transcription</div>
+            <div id="sttBox">Speech-to-text will appear here…</div>
+        </div>
+    </div>
+
+<div class="footer">
+    © 2026 DubSmart AI · Speaker-Aware Video Dubbing Intelligence
+</div>
+
+
+<script>
+const form = document.getElementById("uploadForm");
+const logsEl = document.getElementById("logs");
+const sttBox = document.getElementById("sttBox");
+
+const originalVideo = document.getElementById("originalVideo");
+const dubbedVideo = document.getElementById("dubbedVideo");
+
+let logTimer, statusTimer;
+
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const file = document.getElementById("videoInput").files[0];
+    const formData = new FormData();
+    formData.append("video", file);
+
+    logsEl.textContent = "Uploading video...\n";
+    sttBox.textContent = "Waiting for speech recognition...";
+
+    // Show original immediately
+    originalVideo.src = URL.createObjectURL(file);
+    originalVideo.load();
+
+    await fetch("/start/", {
+        method: "POST",
+        body: formData
+    });
+
+    pollLogs();
+    pollStatus();
+});
+
+function pollLogs() {
+    logTimer = setInterval(async () => {
+        const res = await fetch("/logs/");
+        const data = await res.json();
+        logsEl.textContent = data.logs.join("\n");
+        if (data.stt) {
+            sttBox.textContent = data.stt;
+        }
+    }, 1000);
+}
+
+function pollStatus() {
+    statusTimer = setInterval(async () => {
+        const res = await fetch("/status/");
+        const data = await res.json();
+
+        if (data.ready && data.url) {
+            clearInterval(statusTimer);
+            clearInterval(logTimer);
+
+            dubbedVideo.src = data.url;
+            dubbedVideo.load();
+        }
+    }, 1500);
+}
+</script>
+
+</body>
+</html>

@@ -1,15 +1,18 @@
-from moviepy import VideoFileClip
 import os
+from moviepy import VideoFileClip
 
-def extract_audio(video_path):
-    """
-    4.1 Source Video Input
-    4.2 Audio Extraction
-    """
-    if not os.path.exists(video_path):
-        raise FileNotFoundError("Input video not found")
+
+def extract_audio(video_path, output_dir):
+    os.makedirs(output_dir, exist_ok=True)
+
+    audio_path = os.path.join(output_dir, "extracted_audio.wav")
 
     clip = VideoFileClip(video_path)
-    audio_path = "data/extracted_audio.wav"
-    clip.audio.write_audiofile(audio_path, fps=16000, nbytes=2, codec="pcm_s16le")
+    clip.audio.write_audiofile(
+        audio_path,
+        fps=16000,
+        codec="pcm_s16le"
+    )
+    clip.close()
+
     return audio_path

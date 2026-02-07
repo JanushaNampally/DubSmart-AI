@@ -11,23 +11,24 @@ def merge_audio_with_video(video_path, audio_path, output_path):
         .run()
     )
 '''
-
-import ffmpeg
+import subprocess
+import os
 
 def merge_audio_with_video(video_path, audio_path, output_path):
-    video = ffmpeg.input(video_path)
-    audio = ffmpeg.input(audio_path)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-    (
-        ffmpeg
-        .output(
-            video.video,      # ONLY video stream
-            audio.audio,      # ONLY dubbed audio
-            output_path,
-            vcodec="copy",
-            acodec="aac",
-            shortest=True
-        )
-        .overwrite_output()
-        .run()
-    )
+    command = [
+        "ffmpeg",
+        "-y",
+        "-i", video_path,
+        "-i", audio_path,
+        "-map", "0:v:0",
+        "-map", "1:a:0",
+        "-c:v", "copy",
+        "-shortest",
+        output_path
+    ]
+
+    subprocess.run(command, check=True)
+
+    return output_path

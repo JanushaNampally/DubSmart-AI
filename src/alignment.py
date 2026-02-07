@@ -56,33 +56,23 @@ def create_final_video(video_path, audio_files):
     ).overwrite_output().run(quiet=True)
 
 '''
-import ffmpeg
 import os
+import ffmpeg
 
 def segment_text(segments):
-    """
-    4.6–4.7 Text Segmentation & Alignment
-    """
-    aligned = []
+    cleaned = []
     for seg in segments:
-        aligned.append({
-            "speaker": seg.get("speaker", "Speaker"),
-            "start": seg["start"],
-            "end": seg["end"],
-            "text": seg["text"]
-        })
-    return aligned
+        text = seg["text"].strip()
+        if len(text) < 3:
+            continue
+        cleaned.append(seg)
+    return cleaned
 
 
-def create_final_audio(audio_files):
-    """
-    4.11 Prosody & Timing (approx)
-    4.12 Audio Mixing
-    4.13 Final Dubbed Output
-    """
+def create_final_audio(audio_files, output_dir):
+    os.makedirs(output_dir, exist_ok=True)
 
-    os.makedirs("outputs", exist_ok=True)
-    final_audio = "outputs/final_audio.wav"
+    final_audio = os.path.join(output_dir, "final_audio.wav")
 
     inputs = [ffmpeg.input(f) for f in audio_files]
 

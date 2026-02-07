@@ -42,12 +42,9 @@ def apply_vad(audio_path):
 import soundfile as sf
 from silero_vad import get_speech_timestamps
 import torch
+import os
 
-def apply_vad(audio_path):
-    """
-    4.3 Noise Suppression (light)
-    4.4 Voice Activity Detection
-    """
+def apply_vad(audio_path, output_dir):
     model, _ = torch.hub.load(
         repo_or_dir="snakers4/silero-vad",
         model="silero_vad",
@@ -60,12 +57,14 @@ def apply_vad(audio_path):
 
     timestamps = get_speech_timestamps(wav, model, sampling_rate=sr)
 
-    # Save trimmed audio (simple concat)
-    cleaned = []
+    if not timestamps:
+        raise RuntimeError("VAD detected no speech")
+
+    cleaned_audio = []
     for t in timestamps:
-        cleaned.append(wav[t["start"]:t["end"]])
+        cleaned_audio.append(wav[t["start"]:t["end"]])
 
-    clean_audio = "data/clean_audio.wav"
-    sf.write(clean_audio, torch.cat([torch.tensor(c) for c in cleaned]).numpy(), sr)
+    output_path = os.path.join(output_dir, "clean_audio.wav")
+    sf.write(output_path, torch.cat([torch.tensor(c) for c in cleaned_audio]).numpy(), sr)
 
-    return clean_audio
+    return output_path

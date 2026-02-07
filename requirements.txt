@@ -8,3 +8,4 @@ silero-vad
 assemblyai
 deep-translator
 python-dotenv
+moviepy 
