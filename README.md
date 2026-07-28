@@ -110,8 +110,6 @@ cd DubSmart-AI
 python -m venv myenv
 # Windows:
 myenv\Scripts\activate
-# Linux/Mac:
-source myenv/bin/activate
 
 # 3. Install dependencies
 pip install -r requirements.txt
